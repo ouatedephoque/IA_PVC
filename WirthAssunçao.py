@@ -1,30 +1,65 @@
 __author__ = 'jeremy.wirth & jeshon.assuncao'
 
 def ga_solve(file=None, gui=True, maxtime=0):
-    print("ok")
+    print("Calcul...")
 
-if __name__ == "__main__":
-    import sys, pygame
+def showGame():
+    draw(cities)
 
-    pygame.init()
-
-    bgcolor = 0, 0, 0
-    linecolor = 255, 0, 0
-    x = y = 0
-    running = 1
-    screen = pygame.display.set_mode((640, 400))
-    LEFT = 1;
-
+    running = True
     while running:
         event = pygame.event.poll()
 
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT: # Quit the game
             running = 0
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == LEFT:
+
+        elif event.type == pygame.MOUSEBUTTONDOWN : # Click
             print "Click at (%d, %d)" % event.pos
-            x, y = event.pos
+            cities.append(event.pos)
+            draw(cities)
 
-        pygame.draw.circle(screen, linecolor, (x,y), 4)
-        pygame.display.flip()
+        elif event.type == KEYDOWN and event.key == K_RETURN: # Key Return press
+            running = False
 
-    ga_solve()
+        pygame.display.flip() # Repaint
+
+    ga_solve() # Find the best solution
+
+def draw(cities):
+    screen.fill(0) # Erase all the screen
+
+    i = 0
+    for pos in cities:
+        pygame.draw.circle(screen, cityColor, pos, cityWidth) # Show cities
+
+        # Show labels of cities
+        x, y = pos
+        font = pygame.font.Font(None, 12)
+        text = font.render("%i (%i;%i)" %(i, x, y), True, fontColor)
+        screen.blit(text, (x+2, y-10))
+
+        i += 1
+
+    # Show the number of city
+    font = pygame.font.Font(None, 30)
+    text = font.render("Nombre : %i" % len(cities), True, fontColor)
+    textRect = text.get_rect()
+    screen.blit(text, textRect)
+
+    pygame.display.flip() # Repaint
+
+
+if __name__ == "__main__":
+    import sys, pygame
+    from pygame.locals import KEYDOWN, QUIT, MOUSEBUTTONDOWN, K_RETURN
+
+    pygame.init()
+    screenSize = 500
+    screen = pygame.display.set_mode((screenSize, screenSize))
+
+    cities = []
+    cityColor = 255, 0, 0 # Red
+    fontColor = 255, 255, 255 # White
+    cityWidth = 2 # Width of one point
+
+    showGame()
