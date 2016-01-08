@@ -1,7 +1,22 @@
 __author__ = 'jeremy.wirth & jeshon.assuncao'
 
 def ga_solve(file=None, gui=True, maxtime=0):
-    print("Calcul...")
+	if file == None :
+		showGame()
+	else:
+		openFile = open(file, "r")
+		parseCities(openFile.read())
+    
+
+def parseCities(f):
+	lines = f.split("\n")
+	for line in lines:
+		word = line.split(" ")
+		city = []
+		city.append(int(word[1]))
+		city.append(int(word[2]))
+		cities.append(city)
+	draw(cities)
 
 def showGame():
     draw(cities)
@@ -22,8 +37,6 @@ def showGame():
             running = False
 
         pygame.display.flip() # Repaint
-
-    ga_solve() # Find the best solution
 
 def draw(cities):
     screen.fill(0) # Erase all the screen
@@ -61,5 +74,7 @@ if __name__ == "__main__":
     cityColor = 255, 0, 0 # Red
     fontColor = 255, 255, 255 # White
     cityWidth = 2 # Width of one point
-
-    showGame()
+    try:
+		ga_solve(str(sys.argv[1]))
+    except:
+		ga_solve()
