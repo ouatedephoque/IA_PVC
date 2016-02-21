@@ -15,7 +15,6 @@ def ga_solve(file=None, gui=True, maxtime=0):
 
     populationInit()
     selection()
-    #print(population)
     
 
 
@@ -59,7 +58,30 @@ def showGame():
 
         pygame.display.flip()  # Repaint
 
-
+def drawPath():
+    listCities = population[0].city
+    
+    #dessine tout les chemins
+    cityStart = listCities[0]
+    for i in range(1, len(listCities)):
+        cityEnd = listCities[i]
+        pygame.draw.line(screen, pathColor, (cityStart.posX, cityStart.posY), (cityEnd.posX, cityEnd.posY))  # Show path
+        cityStart = cityEnd
+    
+    #ferme la boucle
+    cityStart = listCities[len(listCities)-1]
+    cityEnd = listCities[0]
+    pygame.draw.line(screen, pathColor, (cityStart.posX, cityStart.posY), (cityEnd.posX, cityEnd.posY))  # Show path    
+    
+    pygame.display.flip() #refresh
+    
+    #pause après avoir dessiné un chemin, enter pour quitter
+    running = True
+    while running:
+        event = pygame.event.poll()
+        if event.type == KEYDOWN and event.key == K_RETURN:
+            running = False
+    
 def draw(cities):
     screen.fill(0)  # Erase all the screen
 
@@ -96,30 +118,30 @@ def populationInit():
 #site reference : http://labo.algo.free.fr/pvc/algorithme_genetique.html
 def crossing(A, B):
     #A et B sont deux individu sélectionnés pour créer un nouvel individu
-    #cassure : a gauche de la cassure on met les ville de A, a droite de la cassure les villes de B
-    cassure = int(len(A.city)/2)
     citiesA = A.city
     citiesB = B.city
+    
+    #cassure : a gauche de la cassure on met les ville de A, a droite de la cassure les villes de B
+    cassure = int(len(citiesA)/2)
     
     listCities = []
         
     #insère les villes de A
-    for i in range(0, cassure-1):
+    for i in range(0, cassure):
         listCities.append(citiesA[i])
     
     #insère les villes de B, on vérifie que la ville n'existe pas deja dans la liste sinon on cherche la ville suivante
-    for i in range(cassure, len(citiesA)-1):
+    for i in range(cassure, len(citiesB)):
         city = citiesB[i]
+        indice = int(city.name[1])
         while checkCityExist(listCities, city):
-            indice = int(city.name[1])+1
+            indice += 1
             if(indice >= len(cities)):
-                city = cities[0]
-            else:
-                city = cities[indice]
+                indice = 0
+            city = cities[indice]
         listCities.append(city)
         
     individuC = Individu(listCities)
-    
     mutation(individuC)
 
 def selection():
@@ -143,6 +165,7 @@ def insertAndResort(C):
     #on remplace le pire individu par celui que l on vient de créer et on retrie la liste
     population[len(population)-1] = C
     population.sort(key=lambda individu: individu.totalDistance)
+    drawPath()
     
     
 def checkCityExist(listCities, city):
@@ -163,6 +186,7 @@ if __name__ == "__main__":
     cities = []
     population = []
 
+    pathColor = 0, 0, 255  # Blue
     cityColor = 255, 0, 0  # Red
     fontColor = 255, 255, 255  # White
     cityWidth = 2  # Width of one point
