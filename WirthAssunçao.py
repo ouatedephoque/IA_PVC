@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 __author__ = 'jeremy.wirth & jeshon.assuncao'
 
 import itertools
