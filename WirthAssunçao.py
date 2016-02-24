@@ -59,6 +59,7 @@ def showGame():
         pygame.display.flip()  # Repaint
 
 def drawPath():
+    draw(cities)
     listCities = population[0].city
     
     #dessine tout les chemins
@@ -116,6 +117,29 @@ def populationInit():
 	population.sort(key=lambda individu: individu.totalDistance)
 
 #site reference : http://labo.algo.free.fr/pvc/algorithme_genetique.html
+def selection():
+    #selection simple : on prend le meilleur individu et un individu au hasard
+    #individuA = population[0]
+    #individuB = population[randint(1,len(population)-1)]
+    
+    #selection par roulette
+    somme = 0
+    for individu in population :
+        somme += individu.totalDistance
+    individuA = selectIndividu(somme)
+    individuB = selectIndividu(somme)    
+        
+    crossing(individuA, individuB)
+
+#fonction pour la selection des parents
+def selectIndividu(s):
+    tirage = randint(0, int(s))
+    somme = 0
+    for individu in population :
+        somme += individu.totalDistance
+        if somme >= tirage:
+            return individu
+    
 def crossing(A, B):
     #A et B sont deux individu sélectionnés pour créer un nouvel individu
     citiesA = A.city
@@ -143,12 +167,6 @@ def crossing(A, B):
         
     individuC = Individu(listCities)
     mutation(individuC)
-
-def selection():
-    #selection simple : on prend le meilleur individu et un individu au hasard
-    individuA = population[0]
-    individuB = population[randint(1,len(population)-1)]
-    crossing(individuA, individuB)
 
 def mutation(C):
     #permutation de deux villes:
