@@ -2,29 +2,57 @@
 __author__ = 'jeremy.wirth & jeshon.assuncao'
 
 import itertools
+import time
 from math import *
 from random import randint
 from individu import Individu
 from city import City
 
-population = []
-cities = []
-
 def ga_solve(file=None, gui=True, maxtime=0):
-    if file == None:
-        showGame()
+    start_time = time.time()
+
+    if(gui == True):
+        if file == None:
+            showGame()
+        else:
+            openFile = open(file, "r")
+            parseCities(openFile.read())
+            draw(cities)
+
     else:
-        openFile = open(file, "r")
-        parseCities(openFile.read())
+        if file == None:
+            print "Error no file input"
+            exit(0)
+
+        else:
+            openFile = open(file, "r")
+            parseCities(openFile.read())
 
     populationInit()
 
-    while(len(population) > 1):
-        print "Population size : ", len(population)
-        selection()
-        crossing()
-        mutation()
-        drawPath()
+    if(maxtime > 0):
+        totalTime = time.time() - start_time
+
+        while(len(population) > 1 or totalTime >= maxtime):
+            print "Population size : ", len(population)
+
+            selection()
+            totalTime = time.time() - start_time
+            crossing()
+            totalTime = time.time() - start_time
+            mutation()
+            totalTime = time.time() - start_time
+            drawPath()
+            totalTime = time.time() - start_time
+
+    else:
+         while(len(population) > 1):
+            print "Population size : ", len(population)
+
+            selection()
+            crossing()
+            mutation()
+            drawPath()
 
     print "\nChemin trouvé ! : ", population[0]
 
@@ -39,7 +67,6 @@ def parseCities(f):
         city = City(name, posX, posY)
 
         cities.append(city)
-    draw(cities)
 
 def showGame():
     draw(cities)
@@ -242,6 +269,9 @@ def replacePopulation(newPopulation):
 if __name__ == "__main__":
     import sys, pygame
     from pygame.locals import KEYDOWN, QUIT, MOUSEBUTTONDOWN, K_RETURN
+
+    population = []
+    cities = []
 
     pygame.init()
     screenSize = 500
