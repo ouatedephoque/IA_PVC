@@ -116,7 +116,7 @@ def draw(cities):
     pygame.display.flip()  # Repaint
 
 def populationInit():
-    listIndividus = list(itertools.islice(itertools.permutations(cities), 50))
+    listIndividus = list(itertools.islice(itertools.permutations(cities), 1000))
 
     for solution in listIndividus:
         individu = Individu(solution)
