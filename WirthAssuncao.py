@@ -3,14 +3,59 @@ __author__ = 'jeremy.wirth & jeshon.assuncao'
 
 import itertools
 import time
+import math
 from math import *
 from random import randint
-from individu import Individu
-from city import City
+import sys, pygame
+from pygame.locals import KEYDOWN, QUIT, MOUSEBUTTONDOWN, K_RETURN
+
+class City:
+    def __init__(self, name, posX, posY):
+        self.name = name
+        self.posX = posX;
+        self.posY = posY;
+
+    def __repr__(self):
+        return "%s(%i,%i)" % (self.name, self.posX, self.posY)
+        
+class Individu:
+    def __init__(self, listCity):
+        self.city = listCity
+        self.totalDistance = self.evaluation()
+
+    def __repr__(self):
+        return '(%s)' % (', '.join(str(x) for x in self.city))
+
+    def evaluation(self):
+        distTot = 0.0
+
+        for index in range(len(self.city)):
+            if(index+1 < len(self.city)):
+                distTot += self.distBetweenTwoCities(self.city[index], self.city[index+1])
+            else:
+                distTot += self.distBetweenTwoCities(self.city[index], self.city[0])
+                break
+
+        return distTot
+
+    def distBetweenTwoCities(self, cityA, cityB):
+        return math.sqrt(pow(cityB.posX - cityA.posX, 2) + pow(cityB.posY - cityA.posY, 2))
+
+pygame.init()
+screenSize = 500
+screen = pygame.display.set_mode((screenSize, screenSize))
+
+pathColor = 0, 0, 255  # Blue
+cityColor = 255, 0, 0  # Red
+fontColor = 255, 255, 255  # White
+cityWidth = 2  # Width of one point
+
+population = []
+cities = []
 
 def ga_solve(file=None, gui=True, maxtime=0):
     start_time = time.time()
-
+    
     if(gui == True):
         if file == None:
             showGame()
@@ -27,9 +72,9 @@ def ga_solve(file=None, gui=True, maxtime=0):
         else:
             openFile = open(file, "r")
             parseCities(openFile.read())
-
+            
     populationInit()
-
+    
     if(maxtime > 0):
         totalTime = time.time() - start_time
 
@@ -267,21 +312,7 @@ def replacePopulation(newPopulation):
     population = list(newPopulation)
 
 if __name__ == "__main__":
-    import sys, pygame
-    from pygame.locals import KEYDOWN, QUIT, MOUSEBUTTONDOWN, K_RETURN
-
-    population = []
-    cities = []
-
-    pygame.init()
-    screenSize = 500
-    screen = pygame.display.set_mode((screenSize, screenSize))
-
-    pathColor = 0, 0, 255  # Blue
-    cityColor = 255, 0, 0  # Red
-    fontColor = 255, 255, 255  # White
-    cityWidth = 2  # Width of one point
-
+    
     try:
         ga_solve(str(sys.argv[1]))
     except:
