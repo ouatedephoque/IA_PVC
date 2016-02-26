@@ -2,9 +2,13 @@
 __author__ = 'jeremy.wirth & jeshon.assuncao'
 
 import itertools
+from math import *
 from random import randint
 from individu import Individu
 from city import City
+
+population = []
+cities = []
 
 def ga_solve(file=None, gui=True, maxtime=0):
     if file == None:
@@ -14,9 +18,19 @@ def ga_solve(file=None, gui=True, maxtime=0):
         parseCities(openFile.read())
 
     populationInit()
-    selection()
-    
 
+    while(len(population) > 1):
+        print len(population)
+        selection()
+        print len(population)
+        crossing()
+        print len(population)
+        mutation()
+        print len(population)
+        drawPath()
+
+    print "Chemin trouvé ! : "
+    print population[0]
 
 def parseCities(f):
     lines = f.split("\n")
@@ -27,11 +41,9 @@ def parseCities(f):
         posX = int(word[1])
         posY = int(word[2])
         city = City(name, posX, posY)
-        #city.append(int(word[1]))
-        #city.append(int(word[2]))
+
         cities.append(city)
     draw(cities)
-
 
 def showGame():
     draw(cities)
@@ -60,23 +72,21 @@ def showGame():
 
 def drawPath():
     draw(cities)
-    listCities = population[0].city
-    
-    #dessine tout les chemins
-    cityStart = listCities[0]
-    for i in range(1, len(listCities)):
-        cityEnd = listCities[i]
-        pygame.draw.line(screen, pathColor, (cityStart.posX, cityStart.posY), (cityEnd.posX, cityEnd.posY))  # Show path
-        cityStart = cityEnd
-    
-    #ferme la boucle
-    cityStart = listCities[len(listCities)-1]
-    cityEnd = listCities[0]
-    pygame.draw.line(screen, pathColor, (cityStart.posX, cityStart.posY), (cityEnd.posX, cityEnd.posY))  # Show path    
+
+    for individu in population:
+        for i in range(0, len(individu.city)):
+            listCities = individu.city
+
+            # Dessine tout les chemins
+            cityStart = listCities[0]
+            for i in range(1, len(listCities)):
+                cityEnd = listCities[i]
+                pygame.draw.line(screen, pathColor, (cityStart.posX, cityStart.posY), (cityEnd.posX, cityEnd.posY))  # Show path
+                cityStart = cityEnd
     
     pygame.display.flip() #refresh
     
-    #pause après avoir dessiné un chemin, enter pour quitter
+    # pause après avoir dessiné un chemin, enter pour quitter
     running = True
     while running:
         event = pygame.event.poll()
@@ -105,7 +115,6 @@ def draw(cities):
 
     pygame.display.flip()  # Repaint
 
-
 def populationInit():
     listIndividus = list(itertools.islice(itertools.permutations(cities), 50))
 
@@ -113,86 +122,123 @@ def populationInit():
         individu = Individu(solution)
         population.append(individu)
 	
-    #tri des individus en fonction de leur distance de parcours
+    # Tri des individus en fonction de leur distance de parcours
 	population.sort(key=lambda individu: individu.totalDistance)
 
-#site reference : http://labo.algo.free.fr/pvc/algorithme_genetique.html
+# Site reference : http://labo.algo.free.fr/pvc/algorithme_genetique.html
 def selection():
-    #selection simple : on prend le meilleur individu et un individu au hasard
-    #individuA = population[0]
-    #individuB = population[randint(1,len(population)-1)]
+    populationSelected = list()
+
+    # Selection Elitisme
+    #NB_INDIVIDUS_TO_KEEP = int(ceil(len(population) * 0.5)) # = 50% de la population
+
+    #for i in range(0, NB_INDIVIDUS_TO_KEEP): # Garde les meilleurs 50% d'individus
+    #    populationSelected.append(population[i])
     
-    #selection par roulette
+    # Selection par roulette
+    NB_INDIVIDUS_SELECT = int(ceil(len(population)/2));
     somme = 0
     for individu in population :
         somme += individu.totalDistance
-    individuA = selectIndividu(somme)
-    individuB = selectIndividu(somme)    
-        
-    crossing(individuA, individuB)
 
-#fonction pour la selection des parents
+    for i in range(0, NB_INDIVIDUS_SELECT):
+        populationSelected.append(selectIndividu(somme))
+
+    replacePopulation(populationSelected)
+
+# Fonction pour la selection des parents
 def selectIndividu(s):
     tirage = randint(0, int(s))
     somme = 0
     for individu in population :
         somme += individu.totalDistance
-        if somme >= tirage:
+        if somme > tirage:
             return individu
     
-def crossing(A, B):
-    #A et B sont deux individu sélectionnés pour créer un nouvel individu
-    citiesA = A.city
-    citiesB = B.city
-    
-    #cassure : a gauche de la cassure on met les ville de A, a droite de la cassure les villes de B
-    cassure = int(len(citiesA)/2)
-    
-    listCities = []
-        
-    #insère les villes de A
-    for i in range(0, cassure):
-        listCities.append(citiesA[i])
-    
-    #insère les villes de B, on vérifie que la ville n'existe pas deja dans la liste sinon on cherche la ville suivante
-    for i in range(cassure, len(citiesB)):
-        city = citiesB[i]
-        indice = int(city.name[1])
-        while checkCityExist(listCities, city):
-            indice += 1
-            if(indice >= len(cities)):
-                indice = 0
-            city = cities[indice]
-        listCities.append(city)
-        
-    individuC = Individu(listCities)
-    mutation(individuC)
+def crossing():
+    populationCrossed = list()
 
-def mutation(C):
-    #permutation de deux villes:
-    rand1 = randint(0, len(C.city)-1)
-    rand2 = randint(0, len(C.city)-1)
-    
-    tmp = C.city[rand1]
-    C.city[rand1] = C.city[rand2]
-    C.city[rand2] = tmp
-    
-    insertAndResort(C)
+    # Si la taille de la liste est impaire on pop le dernier individu
+    # car il n'aura pas d'autre parent pour faire un enfant
+    if(len(population)%2 != 0):
+        indexLast = len(population)-1
+        lastIndividu = population.pop(indexLast)
+        populationCrossed.append(lastIndividu)
 
-def insertAndResort(C):
-    #on remplace le pire individu par celui que l on vient de créer et on retrie la liste
-    population[len(population)-1] = C
-    population.sort(key=lambda individu: individu.totalDistance)
-    drawPath()
+    # Parcours la liste des parents à croiser
+    for i in range(0, len(population)/2):
+        # Selectionne les individus 2 par 2 (0 et 1, 2 et 3, etc.)
+        A = population[i*2]
+        B = population[(i*2)+1]
+
+        #  A et B sont deux individu sélectionnés pour créer un nouvel individu
+        citiesA = A.city
+        citiesB = B.city
     
+        # Cassure : a gauche de la cassure on met les ville de A, a droite de la cassure les villes de B
+        cassure = int(len(citiesA)/2)
     
+        listCities = []
+        
+        # Insère les villes de A
+        for i in range(0, cassure):
+            listCities.append(citiesA[i])
+    
+        # Insère les villes de B, on vérifie que la ville n'existe pas deja dans la liste sinon on cherche la ville suivante
+        for i in range(cassure, len(citiesB)):
+            city = citiesB[i]
+            indice = int(city.name[1])
+            while checkCityExist(listCities, city):
+                indice += 1
+                if(indice >= len(cities)):
+                    indice = 0
+                city = cities[indice]
+            listCities.append(city)
+
+        individuEnfant = Individu(listCities)
+        populationCrossed.append(individuEnfant)
+
+    replacePopulation(populationCrossed)
+
 def checkCityExist(listCities, city):
-    #vérifie si la ville existe déjà dans la liste en comparant leur nom
+    # Vérifie si la ville existe déjà dans la liste en comparant leur nom
     for c in listCities:
         if(c.name == city.name):
             return True
     return False
-    
+
+def mutation():
+    populationMutated = list(population)
+
+    for i in range(0, len(population)):
+        mutateOrNo = randint(0, 1) # Nb aléatoire, 1 ou 0
+
+        # Permet de ne pas muter tous les individus mais seulement certains (aléatoire)
+        if(mutateOrNo == 1):
+            C = population[i]
+            CToMutate = C
+
+            # Permutation de deux villes:
+            rand1 = randint(0, len(CToMutate.city)-1)
+            rand2 = randint(0, len(CToMutate.city)-1)
+
+            tmp = CToMutate.city[rand1]
+            CToMutate.city[rand1] = CToMutate.city[rand2]
+            CToMutate.city[rand2] = tmp
+
+            populationMutated.remove(C)
+            populationMutated.append(CToMutate)
+
+    # Tri des individus en fonction de leur distance de parcours
+	populationMutated.sort(key=lambda individu: individu.totalDistance);
+
+    replacePopulation(populationMutated)
+
+def replacePopulation(newPopulation):
+    global population
+    population = []
+    population = list(newPopulation)
+
 if __name__ == "__main__":
     import sys, pygame
     from pygame.locals import KEYDOWN, QUIT, MOUSEBUTTONDOWN, K_RETURN
@@ -200,9 +246,6 @@ if __name__ == "__main__":
     pygame.init()
     screenSize = 500
     screen = pygame.display.set_mode((screenSize, screenSize))
-
-    cities = []
-    population = []
 
     pathColor = 0, 0, 255  # Blue
     cityColor = 255, 0, 0  # Red
