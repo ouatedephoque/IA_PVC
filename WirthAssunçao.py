@@ -20,17 +20,13 @@ def ga_solve(file=None, gui=True, maxtime=0):
     populationInit()
 
     while(len(population) > 1):
-        print len(population)
+        print "Population size : ", len(population)
         selection()
-        print len(population)
         crossing()
-        print len(population)
         mutation()
-        print len(population)
         drawPath()
 
-    print "Chemin trouvé ! : "
-    print population[0]
+    print "\nChemin trouvé ! : ", population[0]
 
 def parseCities(f):
     lines = f.split("\n")
@@ -92,11 +88,11 @@ def drawPath():
     pygame.display.flip() #refresh
     
     # pause après avoir dessiné un chemin, enter pour quitter
-    running = True
-    while running:
-        event = pygame.event.poll()
-        if event.type == KEYDOWN and event.key == K_RETURN:
-            running = False
+    #running = True
+    #while running:
+    #    event = pygame.event.poll()
+    #    if event.type == KEYDOWN and event.key == K_RETURN:
+    #        running = False
     
 def draw(cities):
     screen.fill(0)  # Erase all the screen
@@ -150,7 +146,6 @@ def selection():
         populationSelected.append(selectIndividu(somme))
 
     replacePopulation(populationSelected)
-
 # Fonction pour la selection des parents
 def selectIndividu(s):
     tirage = randint(0, int(s))
