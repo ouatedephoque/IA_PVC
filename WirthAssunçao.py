@@ -83,7 +83,12 @@ def drawPath():
                 cityEnd = listCities[i]
                 pygame.draw.line(screen, pathColor, (cityStart.posX, cityStart.posY), (cityEnd.posX, cityEnd.posY))  # Show path
                 cityStart = cityEnd
-    
+
+        # Relie le dernier avec le premier
+        cityStart = individu.city[len(individu.city)-1]
+        cityEnd = individu.city[0]
+        pygame.draw.line(screen, pathColor, (cityStart.posX, cityStart.posY), (cityEnd.posX, cityEnd.posY))  # Show path
+
     pygame.display.flip() #refresh
     
     # pause après avoir dessiné un chemin, enter pour quitter
