@@ -55,6 +55,8 @@ cities = []
 
 def ga_solve(file=None, gui=True, maxtime=0):
     start_time = time.time()
+    population[:] = []
+    cities[:] = []
     
     if(gui == True):
         if file == None:
@@ -78,29 +80,38 @@ def ga_solve(file=None, gui=True, maxtime=0):
     if(maxtime > 0):
         totalTime = time.time() - start_time
 
-        while(len(population) > 1 or totalTime >= maxtime):
-            print "Population size : ", len(population)
-
-            selection()
-            totalTime = time.time() - start_time
-            crossing()
-            totalTime = time.time() - start_time
-            mutation()
-            totalTime = time.time() - start_time
-            drawPath()
+        while(totalTime <= maxtime):
+            populationSelected = selection()
+            populationCrossed = crossing(populationSelected)
+            mutation(populationCrossed)
+            if(gui == True):
+                drawPath()
             totalTime = time.time() - start_time
 
     else:
-         while(len(population) > 1):
-            print "Population size : ", len(population)
+         while(1):
+            print "\nPopulation size : ", len(population)
 
-            selection()
-            crossing()
-            mutation()
-            drawPath()
+            populationSelected = selection()
+            populationCrossed = crossing(populationSelected)
+            mutation(populationCrossed)
+            if(gui == True):
+                drawPath()
 
-    print "\nChemin trouvé ! : ", population[0]
-
+    #print "\nChemin trouve !! : ", population[0]
+    print "\nDistance totale : ", population[0].evaluation()
+    print "\n"
+    
+    if(gui == True):
+        # Pause après avoir dessiné le chemin, enter pour quitter
+        print "\nTaper ENTER pour continuer..."
+        running = True
+        while running:
+            event = pygame.event.poll()
+            if event.type == KEYDOWN and event.key == K_RETURN:
+                running = False
+        
+    
 def parseCities(f):
     lines = f.split("\n")
     for line in lines:
@@ -159,13 +170,6 @@ def drawPath():
 
     pygame.display.flip() #refresh
     
-    # pause après avoir dessiné un chemin, enter pour quitter
-    #running = True
-    #while running:
-    #    event = pygame.event.poll()
-    #    if event.type == KEYDOWN and event.key == K_RETURN:
-    #        running = False
-    
 def draw(cities):
     screen.fill(0)  # Erase all the screen
 
@@ -217,7 +221,8 @@ def selection():
     for i in range(0, NB_INDIVIDUS_SELECT):
         populationSelected.append(selectIndividu(somme))
 
-    replacePopulation(populationSelected)
+    return populationSelected
+
 # Fonction pour la selection des parents
 def selectIndividu(s):
     tirage = randint(0, int(s))
@@ -227,21 +232,21 @@ def selectIndividu(s):
         if somme > tirage:
             return individu
     
-def crossing():
+def crossing(populationToCross):
     populationCrossed = list()
 
     # Si la taille de la liste est impaire on pop le dernier individu
     # car il n'aura pas d'autre parent pour faire un enfant
-    if(len(population)%2 != 0):
-        indexLast = len(population)-1
-        lastIndividu = population.pop(indexLast)
+    if(len(populationToCross)%2 != 0):
+        indexLast = len(populationToCross)-1
+        lastIndividu = populationToCross.pop(indexLast)
         populationCrossed.append(lastIndividu)
 
     # Parcours la liste des parents à croiser
-    for i in range(0, len(population)/2):
+    for i in range(0, len(populationToCross)/2):
         # Selectionne les individus 2 par 2 (0 et 1, 2 et 3, etc.)
-        A = population[i*2]
-        B = population[(i*2)+1]
+        A = populationToCross[i*2]
+        B = populationToCross[(i*2)+1]
 
         #  A et B sont deux individu sélectionnés pour créer un nouvel individu
         citiesA = A.city
@@ -270,7 +275,7 @@ def crossing():
         individuEnfant = Individu(listCities)
         populationCrossed.append(individuEnfant)
 
-    replacePopulation(populationCrossed)
+    return populationCrossed
 
 def checkCityExist(listCities, city):
     # Vérifie si la ville existe déjà dans la liste en comparant leur nom
@@ -279,15 +284,15 @@ def checkCityExist(listCities, city):
             return True
     return False
 
-def mutation():
-    populationMutated = list(population)
+def mutation(populationToMutate):
+    populationMutated = list(populationToMutate)
 
-    for i in range(0, len(population)):
+    for i in range(0, len(populationToMutate)):
         mutateOrNo = randint(0, 1) # Nb aléatoire, 1 ou 0
 
         # Permet de ne pas muter tous les individus mais seulement certains (aléatoire)
         if(mutateOrNo == 1):
-            C = population[i]
+            C = populationToMutate[i]
             CToMutate = C
 
             # Permutation de deux villes:
@@ -307,9 +312,8 @@ def mutation():
     replacePopulation(populationMutated)
 
 def replacePopulation(newPopulation):
-    global population
-    population = []
-    population = list(newPopulation)
+    for i in range(len(population), len(population)-len(newPopulation)):
+        population[i] = newPopulation[i]
 
 if __name__ == "__main__":
     
