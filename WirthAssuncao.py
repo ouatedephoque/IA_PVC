@@ -72,12 +72,14 @@ def ga_solve(file=None, gui=True, maxtime=0):
             exit(0)
 
         else:
+            print("\nFilename : %s" % (file))
             openFile = open(file, "r")
             parseCities(openFile.read())
             
     populationInit()
     
     if(maxtime > 0):
+        print("\nMaxtime : %s" % (maxtime))
         totalTime = time.time() - start_time
 
         while(totalTime <= maxtime):

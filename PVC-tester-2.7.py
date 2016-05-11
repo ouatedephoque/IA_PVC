@@ -41,9 +41,9 @@ tolerance = 0.05
 
 # Fichier dans lequel écrire les résultats
 import sys
-outfile = sys.stdout
+#outfile = sys.stdout
 # ou :
-#outfile = open('results.csv', 'w')
+outfile = open('results.csv', 'w')
 
 # affichage à la console d'informations d'avancement?
 verbose = False
@@ -145,3 +145,6 @@ if __name__ == '__main__':
                     outfile.write("%s;" % error)
             outfile.flush()
         outfile.write('\n')
+
+    # Pause après avoir effectuer les tests
+    #raw_input("Press Enter to continue...")
